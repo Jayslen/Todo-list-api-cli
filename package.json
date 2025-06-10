@@ -1,0 +1,38 @@
+{
+  "name": "todo-list-api-cli",
+  "version": "1.0.0",
+  "description": "A todo list API REST with CLI app, both build with nodeJS",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --watch --env-file=.env ./app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jayslen/Todo-list-api-cli.git"
+  },
+  "keywords": [
+    "nodejs",
+    "apiREST",
+    "cli"
+  ],
+  "author": "Jayslen Rojas Serrano",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jayslen/Todo-list-api-cli/issues"
+  },
+  "homepage": "https://github.com/Jayslen/Todo-list-api-cli#readme",
+  "dependencies": {
+    "bcrypt": "6.0.0",
+    "express": "5.1.0",
+    "mysql2": "3.14.1",
+    "zod": "3.25.57"
+  },
+  "devDependencies": {
+    "standard": "^17.1.2"
+  },
+  "eslintConfig": {
+    "extends": "standard"
+  }
+}
