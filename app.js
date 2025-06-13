@@ -1,10 +1,16 @@
-import express from 'express'
+import express, { json } from 'express'
+import { createRoutes } from './routes.js'
+import { TasksModel } from './models/mysql/tasksModel.js'
 import { PORT } from './config.js'
 
 const app = express()
 
-app.get('/', (req, res) => {
-  res.send('<h1>Hello</h1>')
+app.use(json())
+
+app.use(createRoutes(TasksModel))
+
+app.use((_, res, next) => {
+  res.status(404).json({ msg: 'Rout not found', status: 404 })
 })
 
 app.listen(PORT, () => {
