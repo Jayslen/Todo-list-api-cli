@@ -1,4 +1,5 @@
 import mysql from 'mysql2/promise'
+import bcrypt from 'bcrypt'
 
 const connection = await mysql.createConnection({
   host: 'localhost',
@@ -32,6 +33,24 @@ export class TasksModel {
       return { id, name: userName, email: userEmail }
     } catch (e) {
       console.error(e)
+    }
+  }
+
+  static login = async ({ name, password }) => {
+    try {
+      const [[user]] = await connection.query('SELECT BIN_TO_UUID(id) AS id, name, password,email FROM users WHERE LOWER(name) = LOWER(?)', [name])
+
+      if (!user) throw new Error('User does not exists')
+      const isPasswordCorrect = await bcrypt.compare(password, user.password)
+      if (!isPasswordCorrect) throw new Error('Password incorrect')
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user?.email
+      }
+    } catch (Error) {
+      console.log(Error)
     }
   }
 }

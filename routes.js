@@ -6,6 +6,7 @@ export function createRoutes (TasksModel) {
   const Controller = new TasksController(TasksModel)
 
   routes.post('/register', Controller.register)
+  routes.post('/login', Controller.login)
 
   return routes
 }

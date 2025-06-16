@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import { prettifyError, flattenError } from 'zod/v4'
 import { parseRegisterUser } from '../schemas/validationSchema.js'
 import { SALT_ROUNDS } from '../config.js'
+import { createJWT } from '../utils/Token.js'
 
 export class TasksController {
   constructor (TasksModel) {
@@ -30,6 +31,22 @@ export class TasksController {
     } catch (e) {
       res.status(400).json({ status: 400, msg: e.message })
       console.error(e)
+    }
+  }
+
+  login = async (req, res) => {
+    if (req.session) {
+      return res.status(201).send('User is logged')
+    }
+    const data = req.body
+    try {
+      const modelResponse = await this.TasksModel.login({ name: data.name, password: data.password })
+      const { name, id, email } = modelResponse
+      createJWT({ id, name, email })
+      res.status(200).json({ name, id, email })
+    } catch (e) {
+      res.sendStatus(400)
+      console.log(e)
     }
   }
 }
