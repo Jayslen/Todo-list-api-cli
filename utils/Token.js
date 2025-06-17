@@ -20,7 +20,7 @@ export async function verifyToken () {
     return jwt.verify(accessToken, 'secret')
   } catch (Error) {
     if (Error instanceof jwt.TokenExpiredError) {
-      return false
+      return null
     } else {
       console.error('Error verifying token:', Error)
     }
