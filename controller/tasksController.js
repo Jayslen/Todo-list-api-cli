@@ -1,8 +1,9 @@
 import bcrypt from 'bcrypt'
 import { prettifyError, flattenError } from 'zod/v4'
-import { parseRegisterUser } from '../schemas/validationSchema.js'
+import { parseRegisterUser } from '../schemas/userSchema.js'
 import { SALT_ROUNDS } from '../config.js'
 import { createJWT } from '../utils/Token.js'
+import { parseTask } from '../schemas/tasksSchema.js'
 
 export class TasksController {
   constructor (TasksModel) {
@@ -47,6 +48,31 @@ export class TasksController {
     } catch (e) {
       res.sendStatus(400)
       console.log(e)
+    }
+  }
+
+  createTodo = async (req, res) => {
+    const { sub: userId } = req.session
+    const { title, description } = req.body
+
+    const { success: isParsedSucess, data: parsedData, error: parsedErrors } = parseTask({ title, description })
+
+    if (!isParsedSucess) {
+      console.log(prettifyError(parsedErrors))
+      return res
+        .status(400)
+        .json({
+          status: 400,
+          error: 'Bad request with the data expected',
+          conflits: flattenError(parsedErrors).fieldErrors
+        })
+    }
+
+    try {
+      const taskCreated = await this.TasksModel.createTodo({ userId, title: parsedData.title, description: parsedData.description })
+      res.status(201).json(taskCreated)
+    } catch (Error) {
+      res.sendStatus(500)
     }
   }
 }

@@ -53,4 +53,15 @@ export class TasksModel {
       console.log(Error)
     }
   }
+
+  static createTodo = async ({ userId, title, description }) => {
+    try {
+      await connection.query('INSERT INTO tasks (user, title, description) VALUES (UUID_TO_BIN(?),?,?)', [userId, title, description])
+      const [[{ lastId }]] = await connection.query('SELECT LAST_INSERT_ID() AS  lastId')
+      const [[tasksCreated]] = await connection.query('SELECT id,title, description, date FROM tasks WHERE id = ?', [lastId])
+      return tasksCreated
+    } catch (Error) {
+      console.error(Error)
+    }
+  }
 }
