@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt'
+import fs from 'node:fs/promises'
 import { prettifyError, flattenError } from 'zod/v4'
 import { parseRegisterUser } from '../schemas/userSchema.js'
 import { SALT_ROUNDS } from '../config.js'
@@ -28,7 +29,9 @@ export class TasksController {
     const hashPassword = await bcrypt.hash(data.password, (+SALT_ROUNDS))
     const user = { name: data.name, password: hashPassword, email: data.email }
     try {
-      res.status(200).json(await this.TasksModel.register({ user }))
+      const data = await this.TasksModel.register({ user })
+      // createJWT({ ...data })
+      res.status(200).json(data)
     } catch (e) {
       res.status(400).json({ status: 400, msg: e.message })
       console.error(e)
@@ -36,9 +39,6 @@ export class TasksController {
   }
 
   login = async (req, res) => {
-    if (req.session) {
-      return res.status(201).send('User is logged')
-    }
     const data = req.body
     try {
       const modelResponse = await this.TasksModel.login({ name: data.name, password: data.password })
@@ -48,6 +48,15 @@ export class TasksController {
     } catch (e) {
       res.sendStatus(400)
       console.log(e)
+    }
+  }
+
+  logout = async (req, res) => {
+    try {
+      await fs.writeFile('./token.txt', '', { encoding: 'utf-8' })
+      res.sendStatus(204)
+    } catch (Error) {
+      res.status(500).json({ msg: 'Unexpected error' })
     }
   }
 

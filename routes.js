@@ -8,6 +8,7 @@ export function createRoutes (TasksModel) {
   routes.post('/register', Controller.register)
   routes.post('/login', Controller.login)
   routes.post('/todos', Controller.createTodo)
+  routes.post('/logout', Controller.logout)
 
   return routes
 }
