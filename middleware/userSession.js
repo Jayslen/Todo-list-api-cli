@@ -14,8 +14,6 @@ export async function isUserLoggedIn (req, res, next) {
     console.error(Error)
   }
   const isAuthPath = authenticationPaths.includes(req.path)
-  req.session = null
-
   if (user && isAuthPath) {
     return res.status(403).json({ msg: 'Esta autentificado' })
   }
