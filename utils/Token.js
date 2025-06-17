@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises'
 import jwt from 'jsonwebtoken'
+import { TOKEN_EXPIRE } from '../config.js'
 
 export function createJWT ({ name, id, email }) {
   try {
     const accessToken = jwt.sign({ name, email }, 'secret', {
-      expiresIn: '1m',
+      expiresIn: TOKEN_EXPIRE,
       subject: id
     })
 
