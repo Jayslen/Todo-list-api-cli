@@ -54,6 +54,23 @@ export class TasksModel {
     }
   }
 
+  static getTodos = async ({ page, limit, userId }) => {
+    const offset = (page - 1) * limit
+    try {
+      const [tasks] = await connection.query('SELECT id, title, description, date FROM tasks WHERE BIN_TO_UUID(user) = ? LIMIT ? OFFSET ?', [userId, limit, offset])
+      const [[{ total }]] = await connection.query('SELECT COUNT(*) AS total FROM tasks WHERE BIN_TO_UUID(user) = ?', [userId])
+      const response = {
+        data: tasks,
+        page,
+        limit,
+        total
+      }
+      return response
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
   static createTodo = async ({ userId, title, description }) => {
     try {
       await connection.query('INSERT INTO tasks (user, title, description) VALUES (UUID_TO_BIN(?),?,?)', [userId, title, description])

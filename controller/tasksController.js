@@ -61,6 +61,16 @@ export class TasksController {
     }
   }
 
+  getTodos = async (req, res) => {
+    const { sub: userId } = req.session
+    const { page = 1, limit = 2 } = req.query
+    try {
+      res.status(200).json(await this.TasksModel.getTodos({ userId, page: +page, limit: +limit }))
+    } catch (Error) {
+      res.status(500).json({ message: 'An unexpected error occured' })
+    }
+  }
+
   createTodo = async (req, res) => {
     const { sub: userId } = req.session
     const { title, description } = req.body
