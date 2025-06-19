@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises'
 import jwt from 'jsonwebtoken'
 import { TOKEN_EXPIRE } from '../config.js'
 
@@ -9,21 +8,22 @@ export function createJWT ({ name, id, email }) {
       subject: id
     })
 
-    fs.writeFile('./token.txt', accessToken)
+    return accessToken
   } catch (Error) {
     console.error(Error)
   }
 }
 
-export async function verifyToken () {
+export async function verifyToken (token) {
   try {
-    const accessToken = await fs.readFile('./token.txt', { encoding: 'utf-8' })
-    return jwt.verify(accessToken, 'secret')
+    const userData = jwt.verify(token, 'secret')
+    return { data: userData, error: null }
   } catch (Error) {
     if (Error instanceof jwt.TokenExpiredError) {
-      return null
+      return { data: null, error: 'Token expired' }
     } else {
       console.error('Error verifying token:', Error)
+      return { data: null, error: 'Invalid token' }
     }
   }
 }

@@ -3,8 +3,8 @@ import fs from 'node:fs/promises'
 import { prettifyError, flattenError } from 'zod/v4'
 import { parseRegisterUser } from '../schemas/userSchema.js'
 import { SALT_ROUNDS } from '../config.js'
-import { createJWT } from '../utils/Token.js'
 import { parseTask } from '../schemas/tasksSchema.js'
+import { createJWT } from '../utils/Token.js'
 
 export class TasksController {
   constructor (TasksModel) {
@@ -29,9 +29,9 @@ export class TasksController {
     const hashPassword = await bcrypt.hash(data.password, (+SALT_ROUNDS))
     const user = { name: data.name, password: hashPassword, email: data.email }
     try {
-      const data = await this.TasksModel.register({ user })
-      // createJWT({ ...data })
-      res.status(200).json(data)
+      const { name, email, id } = await this.TasksModel.register({ user })
+      const token = createJWT({ email, id, name })
+      res.status(200).json({ token })
     } catch (e) {
       res.status(400).json({ status: 400, msg: e.message })
       console.error(e)
@@ -43,8 +43,9 @@ export class TasksController {
     try {
       const modelResponse = await this.TasksModel.login({ name: data.name, password: data.password })
       const { name, id, email } = modelResponse
-      createJWT({ id, name, email })
-      res.status(200).json({ name, id, email })
+
+      const token = await createJWT({ email, id, name })
+      res.status(200).json({ token })
     } catch (e) {
       res.sendStatus(400)
       console.log(e)
