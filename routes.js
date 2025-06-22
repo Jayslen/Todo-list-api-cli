@@ -11,6 +11,7 @@ export function createRoutes (TasksModel) {
   routes.post('/todos', Controller.createTodo)
   routes.get('/todos', Controller.getTodos)
   routes.delete('/todos/:id', Controller.deleteTasks)
+  routes.put('/todos/:id', Controller.updateTask)
 
   return routes
 }

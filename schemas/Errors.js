@@ -10,7 +10,7 @@ class UserFound extends Error {
   constructor (message = 'This user is taken') {
     super(message)
     this.name = 'User found'
-    this.statusCode = 404
+    this.statusCode = 409
   }
 }
 
@@ -30,7 +30,15 @@ class Unauthorized extends Error {
   }
 }
 
-const customErrors = [UsersNotFound, UserFound, TaskNotFound, Unauthorized]
+class Forbidden extends Error {
+  constructor (message = 'You allowed to complete the operation') {
+    super(message)
+    this.name = 'Forbidden'
+    this.statusCode = 403
+  }
+}
+
+const customErrors = [UsersNotFound, UserFound, TaskNotFound, Unauthorized, Forbidden]
 
 function handleErrors ({ res, Error }) {
   console.error(Error)
@@ -44,4 +52,4 @@ function handleErrors ({ res, Error }) {
   res.status(statusCode).json({ errorName: name, errorCause: isCustomError ? Error.message : 'An unexpected error happend.Try again' })
 }
 
-export { UsersNotFound, UserFound, TaskNotFound, Unauthorized, handleErrors }
+export { UsersNotFound, UserFound, TaskNotFound, Unauthorized, Forbidden, handleErrors }

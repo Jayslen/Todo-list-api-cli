@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt'
 import fs from 'node:fs/promises'
-import { prettifyError, flattenError } from 'zod/v4'
+import { prettifyError, flattenError, success } from 'zod/v4'
 import { parseRegisterUser } from '../schemas/userSchema.js'
 import { SALT_ROUNDS } from '../config.js'
-import { parseTask } from '../schemas/tasksSchema.js'
+import { parseTask, parseTaskForUpdate } from '../schemas/tasksSchema.js'
 import { createJWT } from '../utils/Token.js'
 import { handleErrors } from '../schemas/Errors.js'
 
@@ -101,6 +101,29 @@ export class TasksController {
     try {
       await this.TasksModel.deleteTaks({ taskId, userId: req.session.sub })
       res.sendStatus(204)
+    } catch (Error) {
+      handleErrors({ res, Error })
+    }
+  }
+
+  updateTask = async (req, res) => {
+    const { id: taskId } = req.params
+    const userInput = req.body
+    const { success: isParsedSucess, data: parsedData, error: parsedErrors } = parseTaskForUpdate(userInput)
+
+    if (!isParsedSucess) {
+      console.log(prettifyError(parsedErrors))
+      return res
+        .status(400)
+        .json({
+          status: 400,
+          error: 'Bad request with the data expected',
+          conflits: flattenError(parsedErrors).fieldErrors
+        })
+    }
+    try {
+      const result = await this.TasksModel.updateTask({ taskId, userId: req.session.sub, data: parsedData })
+      res.status(200).json(result)
     } catch (Error) {
       handleErrors({ res, Error })
     }

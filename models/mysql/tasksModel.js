@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise'
 import bcrypt from 'bcrypt'
-import { UsersNotFound, UserFound, TaskNotFound, Unauthorized } from '../../schemas/Errors.js'
+import { UsersNotFound, UserFound, TaskNotFound, Forbidden } from '../../schemas/Errors.js'
 
 const connection = await mysql.createConnection({
   host: 'localhost',
@@ -67,13 +67,30 @@ export class TasksModel {
     return tasksCreated
   }
 
-  static deleteTaks = async ({ taskId, userId }) => {
+  static deleteTask = async ({ taskId, userId }) => {
     const [[result]] = await connection.query('SELECT BIN_TO_UUID(user) AS tasksUserId FROM tasks WHERE id = ?', [taskId])
     if (!result) throw new TaskNotFound()
 
     const { tasksUserId } = result
-    if (tasksUserId !== userId) throw new Unauthorized('Cannot a delete a task own by other')
+    if (tasksUserId !== userId) throw new Forbidden('Cannot a delete a task own by other')
 
     await connection.query('DELETE FROM tasks WHERE id = ?', [taskId])
+  }
+
+  static updateTask = async ({ taskId, userId, data }) => {
+    const [[result]] = await connection.query('SELECT BIN_TO_UUID(user) AS tasksUserId FROM tasks WHERE id = ?', [taskId])
+    if (!result) throw new TaskNotFound()
+
+    const { tasksUserId } = result
+    if (tasksUserId !== userId) throw new Forbidden('Cannot a edit a task own by other')
+
+    const keysForUpdate = Object.keys(data).map(key => key.concat(' = ?')).join(', ')
+    const values = Object.values(data)
+
+    await connection.query(`UPDATE tasks SET ${keysForUpdate} WHERE id = ?`, [...values, taskId])
+
+    const [[taskUpdated]] = await connection.query('SELECT id, title, description FROM tasks WHERE id = ?', [taskId])
+
+    return taskUpdated
   }
 }

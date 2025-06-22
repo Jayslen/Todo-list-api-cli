@@ -8,3 +8,7 @@ const tasksSchema = z.object({
 export function parseTask (input) {
   return tasksSchema.safeParse(input)
 }
+
+export function parseTaskForUpdate (input) {
+  return tasksSchema.partial().safeParse(input)
+}
