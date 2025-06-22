@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import { TOKEN_EXPIRE } from '../config.js'
 
 export function createJWT ({ name, id, email }) {
-  const accessToken = jwt.sing({ name, email }, 'secret', {
+  const accessToken = jwt.sign({ name, email }, 'secret', {
     expiresIn: TOKEN_EXPIRE,
     subject: id
   })
