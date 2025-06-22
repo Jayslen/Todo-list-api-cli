@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise'
 import bcrypt from 'bcrypt'
-import { UsersNotFound, UserFound } from '../../schemas/Errors.js'
+import { UsersNotFound, UserFound, TaskNotFound, Unauthorized } from '../../schemas/Errors.js'
 
 const connection = await mysql.createConnection({
   host: 'localhost',
@@ -65,5 +65,15 @@ export class TasksModel {
     const [[{ lastId }]] = await connection.query('SELECT LAST_INSERT_ID() AS  lastId')
     const [[tasksCreated]] = await connection.query('SELECT id,title, description, date FROM tasks WHERE id = ?', [lastId])
     return tasksCreated
+  }
+
+  static deleteTaks = async ({ taskId, userId }) => {
+    const [[result]] = await connection.query('SELECT BIN_TO_UUID(user) AS tasksUserId FROM tasks WHERE id = ?', [taskId])
+    if (!result) throw new TaskNotFound()
+
+    const { tasksUserId } = result
+    if (tasksUserId !== userId) throw new Unauthorized('Cannot a delete a task own by other')
+
+    await connection.query('DELETE FROM tasks WHERE id = ?', [taskId])
   }
 }

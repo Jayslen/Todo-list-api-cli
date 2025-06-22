@@ -10,6 +10,7 @@ export function createRoutes (TasksModel) {
   routes.post('/logout', Controller.logout)
   routes.post('/todos', Controller.createTodo)
   routes.get('/todos', Controller.getTodos)
+  routes.delete('/todos/:id', Controller.deleteTasks)
 
   return routes
 }

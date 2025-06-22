@@ -95,4 +95,14 @@ export class TasksController {
       handleErrors({ res, Error })
     }
   }
+
+  deleteTasks = async (req, res) => {
+    const { id: taskId } = req.params
+    try {
+      await this.TasksModel.deleteTaks({ taskId, userId: req.session.sub })
+      res.sendStatus(204)
+    } catch (Error) {
+      handleErrors({ res, Error })
+    }
+  }
 }
