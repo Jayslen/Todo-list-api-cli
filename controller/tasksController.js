@@ -5,6 +5,7 @@ import { parseRegisterUser } from '../schemas/userSchema.js'
 import { SALT_ROUNDS } from '../config.js'
 import { parseTask } from '../schemas/tasksSchema.js'
 import { createJWT } from '../utils/Token.js'
+import { handleErrors } from '../schemas/Errors.js'
 
 export class TasksController {
   constructor (TasksModel) {
@@ -32,9 +33,8 @@ export class TasksController {
       const { name, email, id } = await this.TasksModel.register({ user })
       const token = createJWT({ email, id, name })
       res.status(200).json({ token })
-    } catch (e) {
-      res.status(400).json({ status: 400, msg: e.message })
-      console.error(e)
+    } catch (Error) {
+      handleErrors({ res, Error })
     }
   }
 
@@ -44,11 +44,10 @@ export class TasksController {
       const modelResponse = await this.TasksModel.login({ name: data.name, password: data.password })
       const { name, id, email } = modelResponse
 
-      const token = await createJWT({ email, id, name })
+      const token = createJWT({ email, id, name })
       res.status(200).json({ token })
-    } catch (e) {
-      res.sendStatus(400)
-      console.log(e)
+    } catch (Error) {
+      handleErrors({ res, Error })
     }
   }
 
@@ -67,7 +66,7 @@ export class TasksController {
     try {
       res.status(200).json(await this.TasksModel.getTodos({ userId, page: +page, limit: +limit }))
     } catch (Error) {
-      res.status(500).json({ message: 'An unexpected error occured' })
+      handleErrors({ res, Error })
     }
   }
 
@@ -77,6 +76,7 @@ export class TasksController {
 
     const { success: isParsedSucess, data: parsedData, error: parsedErrors } = parseTask({ title, description })
 
+    //! create custom error
     if (!isParsedSucess) {
       console.log(prettifyError(parsedErrors))
       return res
@@ -92,7 +92,7 @@ export class TasksController {
       const taskCreated = await this.TasksModel.createTodo({ userId, title: parsedData.title, description: parsedData.description })
       res.status(201).json(taskCreated)
     } catch (Error) {
-      res.sendStatus(500)
+      handleErrors({ res, Error })
     }
   }
 }

@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise'
 import bcrypt from 'bcrypt'
+import { UsersNotFound, UserFound } from '../../schemas/Errors.js'
 
 const connection = await mysql.createConnection({
   host: 'localhost',
@@ -16,69 +17,53 @@ export class TasksModel {
       [name]
     )
 
-    if (findUser.length > 0) throw new Error('User alredy exists')
+    if (findUser.length > 0) throw new UserFound()
 
     const [[{ uuid }]] = await connection.query('SELECT UUID() AS uuid')
 
-    try {
-      await connection.query(
-        'INSERT INTO users (id,name,email,password) VALUES (UUID_TO_BIN(?),?,?,?);',
-        [uuid, name, email, password]
-      )
-      const [[{ id, name: userName, email: userEmail }]] =
+    await connection.query(
+      'INSERT INTO users (id,name,email,password) VALUES (UUID_TO_BIN(?),?,?,?);',
+      [uuid, name, email, password]
+    )
+    const [[{ id, name: userName, email: userEmail }]] =
         await connection.query(
           'SELECT BIN_TO_UUID(id) AS id, name,email, password FROM users WHERE BIN_TO_UUID(id) = ?',
           [uuid]
         )
-      return { id, name: userName, email: userEmail }
-    } catch (e) {
-      console.error(e)
-    }
+    return { id, name: userName, email: userEmail }
   }
 
   static login = async ({ name, password }) => {
-    try {
-      const [[user]] = await connection.query('SELECT BIN_TO_UUID(id) AS id, name, password,email FROM users WHERE LOWER(name) = LOWER(?)', [name])
+    const [[user]] = await connection.query('SELECT BIN_TO_UUID(id) AS id, name, password,email FROM users WHERE LOWER(name) = LOWER(?)', [name])
 
-      if (!user) throw new Error('User does not exists')
-      const isPasswordCorrect = await bcrypt.compare(password, user.password)
-      if (!isPasswordCorrect) throw new Error('Password incorrect')
+    if (!user) throw new UsersNotFound()
+    const isPasswordCorrect = await bcrypt.compare(password, user.password)
+    if (!isPasswordCorrect) throw new Error('Password incorrect')
 
-      return {
-        id: user.id,
-        name: user.name,
-        email: user?.email
-      }
-    } catch (Error) {
-      console.log(Error)
+    return {
+      id: user.id,
+      name: user.name,
+      email: user?.email
     }
   }
 
   static getTodos = async ({ page, limit, userId }) => {
     const offset = (page - 1) * limit
-    try {
-      const [tasks] = await connection.query('SELECT id, title, description, date FROM tasks WHERE BIN_TO_UUID(user) = ? LIMIT ? OFFSET ?', [userId, limit, offset])
-      const [[{ total }]] = await connection.query('SELECT COUNT(*) AS total FROM tasks WHERE BIN_TO_UUID(user) = ?', [userId])
-      const response = {
-        data: tasks,
-        page,
-        limit,
-        total
-      }
-      return response
-    } catch (e) {
-      console.log(e)
+    const [tasks] = await connection.query('SELECT id, title, description, date FROM tasks WHERE BIN_TO_UUID(user) = ? LIMIT ? OFFSET ?', [userId, limit, offset])
+    const [[{ total }]] = await connection.query('SELECT COUNT(*) AS total FROM tasks WHERE BIN_TO_UUID(user) = ?', [userId])
+    const response = {
+      data: tasks,
+      page,
+      limit,
+      total
     }
+    return response
   }
 
   static createTodo = async ({ userId, title, description }) => {
-    try {
-      await connection.query('INSERT INTO tasks (user, title, description) VALUES (UUID_TO_BIN(?),?,?)', [userId, title, description])
-      const [[{ lastId }]] = await connection.query('SELECT LAST_INSERT_ID() AS  lastId')
-      const [[tasksCreated]] = await connection.query('SELECT id,title, description, date FROM tasks WHERE id = ?', [lastId])
-      return tasksCreated
-    } catch (Error) {
-      console.error(Error)
-    }
+    await connection.query('INSERT INTO tasks (user, title, description) VALUES (UUID_TO_BIN(?),?,?)', [userId, title, description])
+    const [[{ lastId }]] = await connection.query('SELECT LAST_INSERT_ID() AS  lastId')
+    const [[tasksCreated]] = await connection.query('SELECT id,title, description, date FROM tasks WHERE id = ?', [lastId])
+    return tasksCreated
   }
 }
