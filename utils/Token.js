@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken'
-import { TOKEN_EXPIRE } from '../config.js'
+import { JWT_SECRET, TOKEN_EXPIRE } from '../config.js'
 
 export function createJWT ({ name, id, email }) {
-  const accessToken = jwt.sign({ name, email }, 'secret', {
+  const accessToken = jwt.sign({ name, email }, JWT_SECRET, {
     expiresIn: TOKEN_EXPIRE,
     subject: id
   })
@@ -12,7 +12,7 @@ export function createJWT ({ name, id, email }) {
 
 export async function verifyToken (token) {
   try {
-    const userData = jwt.verify(token, 'secret')
+    const userData = jwt.verify(token, JWT_SECRET)
     return { data: userData, error: null }
   } catch (Error) {
     if (Error instanceof jwt.TokenExpiredError) {
