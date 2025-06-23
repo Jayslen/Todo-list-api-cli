@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --watch --env-file=.env ./app.js"
+    "test": "vitest",
+    "start": "node --watch --env-file=.env ./server.js"
   },
   "repository": {
     "type": "git",
@@ -31,7 +31,8 @@
     "zod": "3.25.57"
   },
   "devDependencies": {
-    "standard": "^17.1.2"
+    "standard": "^17.1.2",
+    "vitest": "^3.2.4"
   },
   "eslintConfig": {
     "extends": "standard"
