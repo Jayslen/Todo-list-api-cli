@@ -38,7 +38,16 @@ class Forbidden extends Error {
   }
 }
 
-const customErrors = [UsersNotFound, UserFound, TaskNotFound, Unauthorized, Forbidden]
+class DataBadRequest extends Error {
+  constructor (conflicts, message = 'Bad request with the data expected') {
+    super(message)
+    this.name = 'No data received'
+    this.statusCode = 400
+    this.conflicts = conflicts
+  }
+}
+
+const customErrors = [UsersNotFound, UserFound, TaskNotFound, Unauthorized, Forbidden, DataBadRequest]
 
 function handleErrors ({ res, Error }) {
   console.error(Error)
@@ -49,7 +58,11 @@ function handleErrors ({ res, Error }) {
     statusCode = Error.statusCode
   }
 
-  res.status(statusCode).json({ errorName: name, errorCause: isCustomError ? Error.message : 'An unexpected error happend.Try again' })
+  res.status(statusCode).json({
+    error: name,
+    message: isCustomError ? Error.message : 'An unexpected error happend.Try again',
+    conflicts: Error?.conflicts
+  })
 }
 
-export { UsersNotFound, UserFound, TaskNotFound, Unauthorized, Forbidden, handleErrors }
+export { UsersNotFound, UserFound, TaskNotFound, Unauthorized, Forbidden, DataBadRequest, handleErrors }

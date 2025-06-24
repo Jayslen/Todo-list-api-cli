@@ -1,11 +1,11 @@
 import bcrypt from 'bcrypt'
 import fs from 'node:fs/promises'
-import { prettifyError, flattenError, success } from 'zod/v4'
+import { prettifyError, flattenError } from 'zod/v4'
 import { parseRegisterUser } from '../schemas/userSchema.js'
 import { SALT_ROUNDS } from '../config.js'
 import { parseTask, parseTaskForUpdate } from '../schemas/tasksSchema.js'
 import { createJWT } from '../utils/Token.js'
-import { handleErrors } from '../schemas/Errors.js'
+import { DataBadRequest, handleErrors } from '../schemas/Errors.js'
 
 export class TasksController {
   constructor (TasksModel) {
@@ -62,7 +62,7 @@ export class TasksController {
 
   getTodos = async (req, res) => {
     const { sub: userId } = req.session
-    const { page = 1, limit = 2 } = req.query
+    const { page = 1, limit = 4 } = req.query
     try {
       res.status(200).json(await this.TasksModel.getTodos({ userId, page: +page, limit: +limit }))
     } catch (Error) {
@@ -76,19 +76,9 @@ export class TasksController {
 
     const { success: isParsedSucess, data: parsedData, error: parsedErrors } = parseTask({ title, description })
 
-    //! create custom error
-    if (!isParsedSucess) {
-      console.log(prettifyError(parsedErrors))
-      return res
-        .status(400)
-        .json({
-          status: 400,
-          error: 'Bad request with the data expected',
-          conflits: flattenError(parsedErrors).fieldErrors
-        })
-    }
-
     try {
+      if (!isParsedSucess) { throw new DataBadRequest(flattenError(parsedErrors).fieldErrors) }
+
       const taskCreated = await this.TasksModel.createTodo({ userId, title: parsedData.title, description: parsedData.description })
       res.status(201).json(taskCreated)
     } catch (Error) {
@@ -110,18 +100,9 @@ export class TasksController {
     const { id: taskId } = req.params
     const userInput = req.body
     const { success: isParsedSucess, data: parsedData, error: parsedErrors } = parseTaskForUpdate(userInput)
-
-    if (!isParsedSucess) {
-      console.log(prettifyError(parsedErrors))
-      return res
-        .status(400)
-        .json({
-          status: 400,
-          error: 'Bad request with the data expected',
-          conflits: flattenError(parsedErrors).fieldErrors
-        })
-    }
     try {
+      if (!isParsedSucess) { throw new DataBadRequest(flattenError(parsedErrors).fieldErrors) }
+
       const result = await this.TasksModel.updateTask({ taskId, userId: req.session.sub, data: parsedData })
       res.status(200).json(result)
     } catch (Error) {
