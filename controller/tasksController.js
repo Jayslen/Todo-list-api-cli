@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt'
 import fs from 'node:fs/promises'
 import { prettifyError, flattenError } from 'zod/v4'
 import { parseRegisterUser } from '../schemas/userSchema.js'
-import { SALT_ROUNDS } from '../config.js'
+import { ACCESS_TOKEN_EXP, REFRESH_TOKEN_EXP, SALT_ROUNDS } from '../config.js'
 import { parseTask, parseTaskForUpdate } from '../schemas/tasksSchema.js'
 import { createJWT } from '../utils/Token.js'
 import { DataBadRequest, handleErrors } from '../schemas/Errors.js'
@@ -42,10 +42,12 @@ export class TasksController {
     const data = req.body
     try {
       const modelResponse = await this.TasksModel.login({ name: data.name, password: data.password })
-      const { name, id, email } = modelResponse
+      const { name, id, email, sessionId } = modelResponse
 
-      const token = createJWT({ email, id, name })
-      res.status(200).json({ token })
+      const accessToken = createJWT({ email, id, name, sessionId }, ACCESS_TOKEN_EXP)
+      const refreshToken = createJWT({ email, id, name, sessionId }, REFRESH_TOKEN_EXP)
+
+      res.status(200).json({ token: accessToken, refreshToken })
     } catch (Error) {
       handleErrors({ res, Error })
     }
@@ -61,7 +63,7 @@ export class TasksController {
   }
 
   getTodos = async (req, res) => {
-    const { sub: userId } = req.session
+    const { id: userId } = req.session
     const { page = 1, limit = 4 } = req.query
     try {
       res.status(200).json(await this.TasksModel.getTodos({ userId, page: +page, limit: +limit }))
@@ -71,7 +73,7 @@ export class TasksController {
   }
 
   createTodo = async (req, res) => {
-    const { sub: userId } = req.session
+    const { id: userId } = req.session
     const { title, description } = req.body
 
     const { success: isParsedSucess, data: parsedData, error: parsedErrors } = parseTask({ title, description })
@@ -89,7 +91,7 @@ export class TasksController {
   deleteTasks = async (req, res) => {
     const { id: taskId } = req.params
     try {
-      await this.TasksModel.deleteTaks({ taskId, userId: req.session.sub })
+      await this.TasksModel.deleteTaks({ taskId, userId: req.session.id })
       res.sendStatus(204)
     } catch (Error) {
       handleErrors({ res, Error })
@@ -103,7 +105,7 @@ export class TasksController {
     try {
       if (!isParsedSucess) { throw new DataBadRequest(flattenError(parsedErrors).fieldErrors) }
 
-      const result = await this.TasksModel.updateTask({ taskId, userId: req.session.sub, data: parsedData })
+      const result = await this.TasksModel.updateTask({ taskId, userId: req.session.id, data: parsedData })
       res.status(200).json(result)
     } catch (Error) {
       handleErrors({ res, Error })
