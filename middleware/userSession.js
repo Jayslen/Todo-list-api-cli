@@ -45,11 +45,12 @@ export async function isUserLoggedIn (req, res, next) {
         return next()
       }
 
-      // this should be save in cookies
+      // this should be save in cookies or in header
       const newAccessToken = createJWT({ ...refresh }, ACCESS_TOKEN_EXP)
       req.session = await verifyToken(newAccessToken)
 
       if (isAuthPath) throw new Unauthorized('Alredy have a session')
+      next()
     }
   } catch (Error) {
     handleErrors({ res, Error })
