@@ -2,11 +2,13 @@ import express, { json } from 'express'
 import { createRoutes } from './routes.js'
 import { PORT } from './config.js'
 import { isUserLoggedIn } from './middleware/userSession.js'
+import { rateLimit } from './middleware/rateLimit.js'
 
 export function createServer ({ TasksModel }) {
   const app = express()
 
   app.use(json())
+  app.use(rateLimit)
   app.use(isUserLoggedIn)
 
   app.use(createRoutes(TasksModel))

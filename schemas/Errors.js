@@ -47,7 +47,16 @@ class DataBadRequest extends Error {
   }
 }
 
-const customErrors = [UsersNotFound, UserFound, TaskNotFound, Unauthorized, Forbidden, DataBadRequest]
+class ToManyRequest extends Error {
+  constructor (message = 'Too many requests. Please try later') {
+    super()
+    this.message = message
+    this.name = 'ToManyRequest'
+    this.statusCode = 429
+  }
+}
+
+const customErrors = [UsersNotFound, UserFound, TaskNotFound, Unauthorized, Forbidden, DataBadRequest, ToManyRequest]
 
 function handleErrors ({ res, Error }) {
   console.error(Error)
@@ -65,4 +74,4 @@ function handleErrors ({ res, Error }) {
   })
 }
 
-export { UsersNotFound, UserFound, TaskNotFound, Unauthorized, Forbidden, DataBadRequest, handleErrors }
+export { UsersNotFound, UserFound, TaskNotFound, Unauthorized, Forbidden, DataBadRequest, ToManyRequest, handleErrors }
