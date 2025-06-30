@@ -4,7 +4,10 @@ the purpose of it is, build a REST api that has to be able to: create, update, d
 
 ## Description
 The project uses JWT to handle user auth and uses bcrypt for encrypt the password , it has a middleware for check the Token every request the user does, the token has to be
-in the header ```Authorization: Bearer tokenxxxxx```. The app has some basic test included developed with vitest and supertest.
+in the header ```Authorization: Bearer tokenxxxxx```. Also it has a refresh token mechanism which works saving the session in a db and check if need it to create another one. Finally i impletmented a rate limiter middleware to prevent excessive requests to the API.
+
+The app has some basic test included developed with vitest and supertest.
+
 Another important features are the errors handling.The Error.js Schema has multiples classes that extens the Error class and create an own error. 
 
 ### Project structure
@@ -45,6 +48,4 @@ npm install
 npm run start
 ```
 ### Pending tasks
-- Refresh Token
-- Rate limiting and throttling for the API
-- Refresh token mechanism for the authentication
+- Throttling for the API
